@@ -32,8 +32,48 @@ class Player(object):
             img = pygame.transform.scale(self.img, (self.rect.w, self.rect.h))
             surf.blit(img, rect.topleft)
 
+    def col(self, oldrect, blocks):
+        for block in blocks:
+            self.colBlock(oldrect, block)
+
+    def colBlock(self, oldrect, block):
+        pos = self.getPos()
+
+        #if colliding
+        if self.rect.colliderect(block.rect):
+            #in from left
+            if self.rect.centerx < block.rect.centerx:
+                if oldrect.centerx < block.rect.centerx:
+                    
+
+
+
+
+
+                else:
+                    if oldrect.centery < block.rect.centery:
+                        #From left top go up
+                        self.setPos(self.rect.x, block.rect.top - self.rect.h)
+                        self.onground = True
+                        self.jumping = False
+                        self.yv = 0
+                    else:
+                        #From left bottom go down
+                        self.setPos(newrect.x, block.rect.bottom)
+                        self.yv = 0
+
+
+        else:
+            self.onground = False
+
+
+            
+            
+            
+
 
     def move(self, blocks):
+        oldrect = self.rect.copy()
         keys = pygame.key.get_pressed()
         if keys[pygame.K_UP]:
             if self.up == -1:
@@ -47,13 +87,15 @@ class Player(object):
         if keys[pygame.K_LEFT]:
             self.xvel -= 5
 
-        #self.yvel -= 1
+        if not self.onground:
+            self.yvel -= 1 /60
 
         x, y = self.getPos()
         x += self.xvel / 60
         y += self.yvel / 60
         self.xvel *= .6 ** (1/60)
         self.setPos((x, y))
+        self.col(oldrect, blocks)
 
     def tick(self, blocks):
         self.move(blocks)
@@ -86,10 +128,12 @@ class Block(object):
         self.coord = coord
         self.rect = pygame.Rect(self.coord[0] * self.size, self.coord[0] * self.size, self.size, self.size)
 
-
     def draw(self, surf, camera):
         newRect = camera.shiftRect(self.rect)
         pygame.draw.rect(surf, (0, 0, 0), newRect, 0)
+
+    def getPos(self):
+        return (self.coord[0] * self.size, self.coord[0] * self.size)
 
 class Level():
     def __init__(self, size):
@@ -97,7 +141,7 @@ class Level():
         self.run = True
         self.surf = pygame.Surface(size)
         self.blocks = [Block((0, 0))]
-        self.player = Player((0, 20))
+        self.player = Player((0, -30))
 
     def changeCam(self):
         x, y = self.player.getPos()
